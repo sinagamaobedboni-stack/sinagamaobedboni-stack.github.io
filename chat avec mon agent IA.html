@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Agent IA</title>
+    <style>
+        /* Style général */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f6fa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .chat-container {
+            width: 90%;
+            max-width: 500px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .messages {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+        }
+        .message {
+            margin: 8px 0;
+            padding: 10px 15px;
+            border-radius: 20px;
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+        .user {
+            background-color: #4a90e2;
+            color: white;
+            align-self: flex-end;
+        }
+        .agent {
+            background-color: #e0e0e0;
+            color: black;
+            align-self: flex-start;
+        }
+        .typing {
+            font-style: italic;
+            color: #666;
+            margin: 5px 0;
+        }
+        .input-container {
+            display: flex;
+            border-top: 1px solid #ddd;
+        }
+        input {
+            flex: 1;
+            border: none;
+            padding: 15px;
+            font-size: 16px;
+        }
+        input:focus {
+            outline: none;
+        }
+        button {
+            background-color: #4a90e2;
+            color: white;
+            border: none;
+            padding: 0 20px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #357ab8;
+        }
+        /* Animation des trois points */
+        @keyframes dots {
+            0%, 20% { content: ''; }
+            40% { content: '.'; }
+            60% { content: '..'; }
+            80%, 100% { content: '...'; }
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="messages" id="messages"></div>
+        <div class="input-container">
+            <input type="text" id="message" placeholder="Écris un message..." />
+            <button onclick="envoyer()">Envoyer</button>
+        </div>
+    </div>
+
+    <script>
+        const messagesDiv = document.getElementById('messages');
+        const input = document.getElementById('message');
+        const webhookURL = "xyz"; // Remplace par ton webhook Make
+
+        // Permet d'envoyer le message en appuyant sur "Entrée"
+        input.addEventListener("keypress", function(e) {
+            if (e.key === "Enter") {
+                envoyer();
+            }
+        });
+
+        function envoyer() {
+            const userMessage = input.value.trim();
+            if (!userMessage) return;
+
+            // Affiche le message de l'utilisateur
+            afficherMessage(userMessage, 'user');
+            input.value = '';
+            
+            // Affiche animation "agent écrit..."
+            const typingDiv = document.createElement('div');
+            typingDiv.classList.add('message', 'agent', 'typing');
+            typingDiv.innerText = "L'agent est en train d'écrire...";
+            messagesDiv.appendChild(typingDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+            // Envoi au webhook Make
+            fetch(webhookURL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ message: userMessage })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Supprime l'animation
+                typingDiv.remove();
+                // Affiche la réponse de l'IA
+                afficherMessage(data.reponse || "Pas de réponse", 'agent');
+            })
+            .catch(err => {
+                typingDiv.remove();
+                afficherMessage("Erreur : " + err, 'agent');
+            });
+        }
+
+        function afficherMessage(msg, type) {
+            const div = document.createElement('div');
+            div.classList.add('message', type);
+            div.innerText = msg;
+            messagesDiv.appendChild(div);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+    </script>
+</body>
+</html>
