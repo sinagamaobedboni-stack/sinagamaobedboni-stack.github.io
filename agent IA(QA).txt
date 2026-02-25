@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chat IA</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg, #1e3c72, #2a5298);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+/* Container principal */
+.chat-container {
+    width: 95%;
+    max-width: 600px;
+    height: 90vh;
+    background: white;
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+    overflow: hidden;
+}
+
+/* Header */
+.chat-header {
+    background: #2a5298;
+    color: white;
+    padding: 15px;
+    text-align: center;
+    font-weight: bold;
+}
+
+/* Zone messages */
+.chat-messages {
+    flex: 1;
+    padding: 15px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* Messages */
+.message {
+    max-width: 75%;
+    padding: 10px 15px;
+    border-radius: 15px;
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+.user-message {
+    align-self: flex-end;
+    background: #2a5298;
+    color: white;
+}
+
+.bot-message {
+    align-self: flex-start;
+    background: #f1f1f1;
+}
+
+/* Zone input */
+.chat-input {
+    display: flex;
+    padding: 10px;
+    border-top: 1px solid #ddd;
+    background: #fafafa;
+}
+
+.chat-input input {
+    flex: 1;
+    padding: 10px;
+    border-radius: 20px;
+    border: 1px solid #ccc;
+    outline: none;
+}
+
+.chat-input button {
+    margin-left: 10px;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 20px;
+    background: #2a5298;
+    color: white;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.chat-input button:hover {
+    background: #1e3c72;
+}
+
+/* Animation typing */
+.typing {
+    font-style: italic;
+    color: #777;
+}
+
+.dots::after {
+    content: '';
+    animation: dots 1.5s infinite;
+}
+
+@keyframes dots {
+    0% { content: ''; }
+    33% { content: '.'; }
+    66% { content: '..'; }
+    100% { content: '...'; }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+    .chat-container {
+        height: 100vh;
+        border-radius: 0;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="chat-container">
+    <div class="chat-header">Agent IA</div>
+    
+    <div class="chat-messages" id="chat"></div>
+    
+    <div class="chat-input">
+        <input type="text" id="messageInput" placeholder="Écris ton message...">
+        <button onclick="sendMessage()">Envoyer</button>
+    </div>
+</div>
+
+<script>
+const webhookURL = "XYZ"; // Remplace par ton vrai webhook Make
+const chat = document.getElementById("chat");
+const input = document.getElementById("messageInput");
+
+function addMessage(text, className) {
+    const div = document.createElement("div");
+    div.classList.add("message", className);
+    div.innerText = text;
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
+}
+
+function showTyping() {
+    const div = document.createElement("div");
+    div.classList.add("message", "bot-message", "typing");
+    div.id = "typing";
+    div.innerHTML = `L'agent est en train d'écrire<span class="dots"></span>`;
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
+}
+
+function removeTyping() {
+    const typing = document.getElementById("typing");
+    if (typing) typing.remove();
+}
+
+async function sendMessage() {
+    const message = input.value.trim();
+    if (!message) return;
+
+    addMessage(message, "user-message");
+    input.value = "";
+
+    showTyping();
+
+    try {
+        const response = await fetch(webhookURL, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ message: message })
+        });
+
+        const data = await response.json();
+        removeTyping();
+        addMessage(data.reply || "Pas de réponse reçue.", "bot-message");
+
+    } catch (error) {
+        removeTyping();
+        addMessage("Erreur de connexion au serveur.", "bot-message");
+    }
+}
+
+/* Envoi avec la touche Entrée */
+input.addEventListener("keypress", function(e) {
+    if (e.key === "Enter") {
+        sendMessage();
+    }
+});
+</script>
+
+</body>
+</html>
