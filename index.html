@@ -81,7 +81,6 @@ body {
     outline: none;
 }
 
-/* Bouton + */
 .attach-btn {
     width: 35px;
     height: 35px;
@@ -127,7 +126,7 @@ body {
     <div class="chat-messages" id="chat"></div>
     
     <div class="chat-input">
-        <!-- Bouton + -->
+        <!-- Bouton + pour pièce jointe -->
         <button class="attach-btn" onclick="document.getElementById('fileInput').click()">+</button>
         <input type="file" id="fileInput" style="display:none">
 
@@ -144,6 +143,7 @@ const fileInput = document.getElementById("fileInput");
 
 let selectedFile = null;
 
+// Affiche le nom du fichier sélectionné
 fileInput.addEventListener("change", function() {
     selectedFile = fileInput.files[0];
     if (selectedFile) {
@@ -181,17 +181,21 @@ async function sendMessage() {
 
     showTyping();
 
-    const formData = new FormData();
-    formData.append("message", message);
+    // Préparer le payload en JSON
+    let payload = { message: message };
 
+    // Si un fichier est sélectionné, convertir en Base64 pour Make
     if (selectedFile) {
-        formData.append("file", selectedFile);
+        const base64 = await fileToBase64(selectedFile);
+        payload.fileName = selectedFile.name;
+        payload.fileData = base64;
     }
 
     try {
         const response = await fetch(webhookURL, {
             method: "POST",
-            body: formData
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
         });
 
         const data = await response.json();
@@ -204,9 +208,21 @@ async function sendMessage() {
     } catch (error) {
         removeTyping();
         addMessage("Erreur de connexion au serveur.", "bot-message");
+        console.error(error);
     }
 }
 
+// Convertit un fichier en Base64
+function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result.split(",")[1]); // on enlève le header data:
+        reader.onerror = error => reject(error);
+        reader.readAsDataURL(file);
+    });
+}
+
+// Envoi avec la touche Entrée
 input.addEventListener("keypress", function(e) {
     if (e.key === "Enter") {
         sendMessage();
