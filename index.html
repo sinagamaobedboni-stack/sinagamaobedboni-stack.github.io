@@ -54,8 +54,16 @@ body {
     animation: fadeIn 0.3s ease-in-out;
 }
 
-.user-message { align-self: flex-end; background: #2a5298; color: white; }
-.bot-message { align-self: flex-start; background: #f1f1f1; }
+.user-message { 
+    align-self: flex-end; 
+    background: #2a5298; 
+    color: white; 
+}
+
+.bot-message { 
+    align-self: flex-start; 
+    background: #f1f1f1; 
+}
 
 .chat-input {
     display: flex;
@@ -78,7 +86,7 @@ body {
     height: 40px;
     border-radius: 50%;
     border: none;
-    background: #ff9900; /* visible */
+    background: #ff9900;
     color: white;
     font-size: 24px;
     cursor: pointer;
@@ -95,7 +103,10 @@ body {
     cursor: pointer;
 }
 
-.typing { font-style: italic; color: #777; }
+.typing { 
+    font-style: italic; 
+    color: #777; 
+}
 
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(5px); }
@@ -112,7 +123,6 @@ body {
     <div class="chat-messages" id="chat"></div>
     
     <div class="chat-input">
-        <!-- Bouton visible -->
         <button class="attach-btn" onclick="document.getElementById('fileInput').click()">+</button>
         <input type="file" id="fileInput" style="display:none">
 
@@ -131,7 +141,9 @@ let selectedFile = null;
 
 fileInput.addEventListener("change", function() {
     selectedFile = fileInput.files[0];
-    if (selectedFile) addMessage("📎 Fichier sélectionné : " + selectedFile.name, "user-message");
+    if (selectedFile) {
+        addMessage("📎 Fichier sélectionné : " + selectedFile.name, "user-message");
+    }
 });
 
 function addMessage(text, className) {
@@ -164,7 +176,6 @@ async function sendMessage() {
 
     showTyping();
 
-    // JSON stable
     let payload = { message: message };
 
     if (selectedFile) {
@@ -174,15 +185,14 @@ async function sendMessage() {
     }
 
     try {
-        const response = await fetch(webhookURL, {
+        await fetch(webhookURL, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload)
         });
 
-        const data = await response.json();
         removeTyping();
-        addMessage(data.reply || "Pas de réponse reçue.", "bot-message");
+        addMessage("Message envoyé avec succès ✅", "bot-message");
 
         selectedFile = null;
         fileInput.value = "";
